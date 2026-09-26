@@ -6,9 +6,9 @@ import readchar
 from pathlib import Path
 from datetime import date
 
-POKEDEX_FILE = Path.home() / ".local/share/poketerm/pokedex.txt"
-GEN_DIR = Path.home() / ".local/share/poketerm/gen_files"
-TRAINER_FILE = Path.home() / ".local/share/poketerm/trainer.json"
+POKEDEX_FILE = Path.home() / ".local/share/pokegodex/pokedex.txt"
+GEN_DIR = Path.home() / ".local/share/pokegodex/gen_files"
+TRAINER_FILE = Path.home() / ".local/share/pokegodex/trainer.json"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 INVERT = "\033[7m"
@@ -489,7 +489,7 @@ def check_pokedex_achievements():
     # Hall of Fame Induction
     # -----------------
     if all_achievements:
-        unlock(trainer, "Poketerm - Completed it mate!", "Completed all achievements", "special")
+        unlock(trainer, "Pokegodex - Completed it mate!", "Completed all achievements", "special")
     
     save_trainer(trainer)
 
