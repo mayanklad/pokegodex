@@ -5,11 +5,12 @@ set -euo pipefail
 ### Configuration
 ### =========================
 
-INSTALL_DIR="$HOME/.local/share/"
+LOCAL_USER="${SUDO_USER:-$(logname)}"
 BIN_DIR="/usr/local/bin"
 
-LOCAL_USER="${SUDO_USER:-$(logname)}"
-POKEDEX_FILE="$HOME/.local/share/pokegodex/pokedex.txt"
+LOCAL_HOME="$(getent passwd "$LOCAL_USER" | cut -d: -f6)"
+INSTALL_DIR="$LOCAL_HOME/.local/share"
+POKEDEX_FILE="$LOCAL_HOME/.local/share/pokegodex/pokedex.txt"
 POKEDEX_HASH="$POKEDEX_FILE.sha256"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
