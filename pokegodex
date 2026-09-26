@@ -256,5 +256,5 @@ else
     shasum -a 256 "$POKEDEX_FILE" > "$POKEDEX_HASH"
 fi
 
-# === SHOW IMAGE IN NEOFETCH ===
+# === SHOW IMAGE IN FASTFETCH ===
 POKEGODEX_RUNNING=1 fastfetch --file-raw - <<< "$image_source"
