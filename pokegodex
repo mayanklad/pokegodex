@@ -113,18 +113,25 @@ if [[ -f "$POKEDEX_HASH" ]]; then
     fi
 fi
 
-raw_output=$(pokemon-colorscripts -r $GEN_COLLECTION)
-name=$(echo "$raw_output" | head -n 1)
+# === PICK A RANDOM POKEMON FROM THE SELECTED GENERATION RANGE OURSELVES ===
+IFS=- read -r gstart gend <<< "$GEN_COLLECTION"
+gend=${gend:-$gstart}
 
-if [[ "$name" == *"(shiny)"* ]]; then
-    base_name=$(echo "$name" | sed -e 's/ (shiny)//g')
-    raw_output=$(pokemon-colorscripts -n "$base_name")
-    name=$(echo "$raw_output" | head -n 1)
-    sprite=$(echo "$raw_output" | tail -n +2)
-else
-    base_name="$name"
-    sprite=$(echo "$raw_output" | tail -n +2)
+gen_pool_files=()
+for ((g=gstart; g<=gend; g++)); do
+    gen_pool_files+=("$GEN_DIR/gen${g}_list.txt")
+done
+
+base_name=$(cat "${gen_pool_files[@]}" 2>/dev/null | shuf -n 1)
+
+if [[ -z "$base_name" ]]; then
+    echo "pokegodex: could not pick a pokemon for generation range '$GEN_COLLECTION'"
+    return 1
 fi
+
+raw_output=$(pokego --name "$base_name")
+name=$(echo "$raw_output" | head -n 1)
+sprite=$(echo "$raw_output" | tail -n +2)
 
 # === SHINY ROLL (1/4096 or 1/10 if THAT generation complete) ===
 
@@ -163,7 +170,7 @@ fi
 
 # === FETCH SHINY IF NEEDED ===
 if [ "$shiny" = true ]; then
-    raw_output=$(pokemon-colorscripts -n "$base_name" -s)
+    raw_output=$(pokego --name "$base_name" --shiny)
     sprite=$(echo "$raw_output" | tail -n +2)
 fi
 
@@ -250,21 +257,4 @@ else
 fi
 
 # === SHOW IMAGE IN NEOFETCH ===
-
-NEOFETCH_CFG_TMP="$(mktemp)"
-cat > "$NEOFETCH_CFG_TMP" <<'EOF'
-print_info() {
-    prin "\033[38;5;81m${USER}\033[0m"
-    info underline
-    info "OS" distro
-    info "Host" model
-    info "Kernel" kernel
-    info "Uptime" uptime
-    info "Packages" packages
-    info "Shell" shell
-    info "Terminal" term
-}
-EOF
-POKEGODEX_RUNNING=1 zsh -ic "neofetch --config '$NEOFETCH_CFG_TMP' --source '$image_source'"
-
-rm -f "$NEOFETCH_CFG_TMP"
+POKEGODEX_RUNNING=1 fastfetch --raw - <<< "$image_source"
