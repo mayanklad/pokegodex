@@ -14,8 +14,8 @@ from datetime import date, timedelta
 # -----------------------
 # Paths
 # -----------------------
-TRAINER_FILE = Path.home() / ".local/share/poketerm/trainer.json"
-GEN_DIR = Path.home() / ".local/share/poketerm/gen_files"
+TRAINER_FILE = Path.home() / ".local/share/pokegodex/trainer.json"
+GEN_DIR = Path.home() / ".local/share/pokegodex/gen_files"
 
 def clear():
     sys.stdout.write("\033[2J\033[H\033[3J")
@@ -117,7 +117,7 @@ def choose_from_list(title, options):
 
 def get_pokemon_color_code(pokemon_name: str) -> int:
     name = normalize_name(pokemon_name)
-    cache_path = Path.home() / f".local/share/poketerm/cache/api_data/{name}.json"
+    cache_path = Path.home() / f".local/share/pokegodex/cache/api_data/{name}.json"
     
     data = {}
     if cache_path.exists():
