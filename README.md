@@ -1,129 +1,120 @@
-# poketerm
+# Pokegodex
 
-Linux collectable terminal Pokédex that captures sprites from the external tool `pokemon-colorscripts`.
+Linux collectable terminal Pokédex that captures sprites from the external tool `pokego`, and shows them as your `fastfetch` logo on shell startup.
 
-This repository provides a simple workflow to "catch" Pokemon created from pokemon-colorscripts, keep a persistent pokédex, and view per-generation progress.
+This repository provides a simple workflow to "catch" Pokemon rendered by `pokego`, keep a persistent pokédex, and view per-generation progress.
 
-
-
-https://github.com/user-attachments/assets/9277514e-d871-4d28-a3ae-59980b39fec3
-
-
+Fork of [poketerm](https://github.com/chris-wood-mo/poketerm) by chris-wood-mo — same catch tracking, shiny odds, XP, streaks, and achievements, just powered by [pokego](https://github.com/rubiin/pokego) (Go, faster) for sprites instead of `pokemon-colorscripts`, and `fastfetch` instead of `neofetch`/`hyfetch`. This fork also flattens the project: the upstream repo carried a `files/0.0.1` … `files/0.0.6` directory per release plus a migration script for upgrading between them. There's only one version of this fork, so that's gone — updating is just "pull the latest files and re-run the installer."
 
 ## Features
 
-- Capture a random Pokemon sprite (normal or shiny) using `pokemon-colorscripts`.
+- Capture a random Pokemon sprite (normal or shiny) using `pokego`.
 - Persist caught Pokemon to a user pokédex file.
-- Keep per-generation ordering using the generation lists in gen_files/.
-- View a generation-specific catch progress report.
+- Keep per-generation ordering using the generation lists in `gen_files/`.
+- View a generation-specific catch progress report, trainer profile, and achievements.
 
 ## Requirements
 
-- Homebrew
+- [pokego](https://github.com/rubiin/pokego) — install separately, not managed by this installer
+- [fastfetch](https://github.com/fastfetch-cli/fastfetch) — install separately, not managed by this installer
 - Python3
 - Zsh
-- readchar (Can be installed via `pip3 install -r requirements.txt`)
-- pokemon-colorscripts (installed by the included installer via Homebrew if missing)
-- hyfetch (installed by the included installer via Homebrew if missing)
+- readchar (`pip3 install -r requirements.txt`)
+
+## Project layout
+
+```
+pokegodex/
+├── install.sh          # installer / uninstaller
+├── pokegodex          # the shell script hooked into ~/.zshrc: picks + catches a Pokemon, shows it via fastfetch
+├── pokedex.py          # the `pokedex` command: browse your caught Pokemon, trainer profile, achievements
+├── trainer.py          # XP, level, and streak bookkeeping used by pokegodex and pokedex.py
+├── achievements.py     # achievement definitions and unlock checks
+├── trainer.json        # default trainer profile (only copied in on first install)
+├── requirements.txt
+├── LICENSE
+└── gen_files/
+    ├── gen1_list.txt … gen8_list.txt   # canonical per-generation Pokemon name lists
+```
+
+No pre-baked sprite/API cache ships in the repo (the upstream one did, at ~22 MB). `pokedex.py` builds its own cache under `~/.local/share/pokegodex/cache/` the first time it needs a given Pokemon's sprite or PokeAPI data, so this stays a lot smaller to clone; the only cost is a brief PokeAPI fetch + `pokego` call the very first time you view each Pokemon in the `pokedex` viewer.
 
 ## Installation
 
-To install for the first time run:
+1. Make sure `pokego` and `fastfetch` are installed and on your `$PATH` (`pokego --version` and `fastfetch --version` should both work).
 
-1. Run the installer:
+2. Run the installer:
 
-   ```/bin/bash
+   ```bash
    sudo ./install.sh
    ```
 
-   Or for installing and using just a specific generation, default is 1-8: 
-   ```
-   ```/bin/bash
-   sudo ./install.sh --gen 1 or sudo ./install.sh --gen 2-5
+   Or to only ever catch from a specific generation or range (default is all of 1-8):
+
+   ```bash
+   sudo ./install.sh --gen 1
+   sudo ./install.sh --gen 2-5
    ```
 
 This will:
 
-- Copy generation lists to $HOME/.local/share/poketerm/gen_files
-- Copy cache api and sprite data to $HOME/.local/share/poketerm/cache
-- Install or link the `pokedex` helper script to /usr/local/bin/pokedex and other helpers needed to $HOME/.local/share/poketerm/
-- Install the poketerm shell helper
-- Add the poketerm prompt script into your ~/.zshrc (backups ~/.zshrc to poketerm/zshrc.backup)
+- Copy `gen_files/`, `pokegodex`, `pokedex.py`, `trainer.py`, `achievements.py` to `$HOME/.local/share/pokegodex/`
+- Seed `trainer.json` there on first install only (an update never resets your trainer profile)
+- Symlink `/usr/local/bin/pokegodex` and `/usr/local/bin/pokedex`
+- Print the line you need to add to your `~/.zshrc` to catch a Pokemon on every new shell
+
+3. **The installer does not edit `~/.zshrc` for you.** It prints the exact line to add — either
+
+   ```
+   pokegodex
+   ```
+
+   or, if you installed with `--gen`, the matching `pokegodex --gen ...` line. Add that line yourself wherever you like in `~/.zshrc` (e.g. right where you already invoke `fastfetch`/`neofetch`, if you do), then `source ~/.zshrc`.
 
 ## Updating
 
-Updating poketerm will not lose any of your existing pokedex. Pull changes and run the installer with the update flag:
+There's no migration system anymore — just pull the latest files and re-run the installer:
 
-1. Run the installer:
+```bash
+git pull origin main
+sudo ./install.sh
+```
 
-   ```/bin/bash
-   git pull origin main
-   sudo ./install.sh --update
-   ```
-
-This will:
-
-- Run any necessary migrations updater
-
-Current Update Paths:
-
-- 0.0.1 -> 0.0.2
-- 0.0.2 -> 0.0.3
-- 0.0.3 -> 0.0.4: Note after this update to use a specific generation of pokemon you will need to update your zshrc from poketerm -> poketerm --gen 1 or poketerm --gen 2-5.
-- 0.0.4 -> 0.0.5: Note you may need to install the readchar python package, this can be done via `pip3 install -r requirements.txt`.
-- 0.0.5 -> 0.0.6
-
-Upgrade Paths Dropped in Next Release:
-- 0.0.1 -> 0.0.2
-- 0.0.2 -> 0.0.3
+The installer is idempotent: it won't touch your `~/.zshrc` hook again if it's already there, and it won't overwrite your `trainer.json`, so your pokédex and progress are untouched.
 
 ## Usage
 
-- Run the capture script (installed as `/usr/local/bin/pokedex` by the installer) to view your stored pokédex per generation:
+- Run the capture script (installed as `/usr/local/bin/pokedex`) to view your stored pokédex per generation:
+
+  ```
   pokedex [GEN_NUM 1-8]
+  ```
 
   Example:
   - `pokedex` (defaults to generation 1)
   - `pokedex 3` (shows generation 3 progress)
-  - `pokedex -h/--help/help` (shows help)
+  - `pokedex -h`/`--help`/`help` (shows help)
 
-- Navigate from the pokedex to either of the Trainer Profile by pressing `p` or Achievements pages by pressing `a`
+- From the pokedex, press `p` for the Trainer Profile or `a` for Achievements.
 
-- The capture behavior appended into your shell (see ~/.zshrc) hooks into `pokemon-colorscripts -r 1-8` to display a sprite and will:
-  - Add the Pokemon name to the persistent pokedex file (if not already present).
-  - Mark random 1-in-4096 encounters as shiny.
-
-## Files of interest
-
-- Installer: install.sh — sets up files and links the pokedex helper.
-- Main helper: pokedex.py — display your per-generation progress and summary.
-- Other helpers: achievements.py checks and displays achievements collected, trainer.py and trainer.json used to store and display your trainer profile.
-- Shell integration: zshrc — snippet that calls `pokemon-colorscripts`, updates pokedex, and displays the sprite via neofetch.
-- Generation lists: gen_files/gen{1..8}_list.txt — canonical ordering used to sort your pokedex per generation.
-- Cached data: Caches sprites from `pokemon-colorscripts` and pokemon data from pokeapi for faster lookup
+- The capture behavior appended to your shell (see `~/.zshrc`) picks a random Pokemon from your selected generation range, renders it via `pokego --name <name>`, and:
+  - adds it to your persistent pokedex file (if not already present)
+  - marks random 1-in-4096 encounters as shiny (1-in-10 once that generation is fully caught)
+  - awards XP, updates your catch streak, and checks for newly unlocked achievements
+  - shows the sprite as your `fastfetch` logo for that shell session, on top of whatever `fastfetch` config/modules you already have
 
 ## Uninstalling
 
-To uninstall poketerm please run the following command:
+```bash
+sudo ./install.sh --uninstall
+```
 
-1. Run the installer:
-
-   ```/bin/bash
-   sudo ./install.sh --uninstall
-   ```
-
-This will:
-
-- Uninstall Hyfetch
-- Uninstall pokemon-colorscripts
-- Uninstall poketerm
+This removes `$HOME/.local/share/pokegodex/` and the `/usr/local/bin` symlinks. Since the installer never touched `~/.zshrc`, there's nothing to restore there — just remove the `pokegodex` line you added yourself. `pokego` and `fastfetch` are left alone — they're tools you installed yourself, not something this installer manages.
 
 ## Notes
 
-- The persistent pokedex is stored at $HOME/.local/share/poketerm/pokedex.txt (see the `POKEDEX_FILE` variable in the bundled script).
-- The installer will apply migrations and take steps to protect the pokedex file (make it harder to accidentally or trivially edit)
-- Generated files and lists are installed to $HOME/.local/share/poketerm/.
-- Cached data is installed to $HOME/.local/share/poketerm/.
+- The persistent pokedex is stored at `$HOME/.local/share/pokegodex/pokedex.txt` (the `POKEDEX_FILE` variable in the bundled script).
+- The pokedex file is kept read-only (`chmod 444`) between runs, with a `sha256` integrity check, to make it harder to hand-edit; use `pokegodex --remove <name>` to take something out properly.
 
 ## Achievements
 
@@ -179,19 +170,11 @@ The list of achievements you can obtain are:
 - HIDDEN
 - HIDDEN
 
-There are 42 achievements in total for you to unlock. Some have been left hidden purposly so you can unlock them as you continue collecting!
+There are 42 achievements in total for you to unlock. Some have been left hidden purposely so you can unlock them as you continue collecting!
 
 ## Credits
 
-- All the pokemon designs, names, branding etc. are trademarks of [The Pokemon Company](https://www.pokemon.com/uk)
-- [Pokemon-Colorscripts](https://gitlab.com/phoneybadger/pokemon-colorscripts) for the sprites
+- All the Pokemon designs, names, branding etc. are trademarks of [The Pokemon Company](https://www.pokemon.com/uk)
+- [poketerm](https://github.com/chris-wood-mo/poketerm) — the original project this is forked from; all catch/XP/achievement design is theirs
+- [pokego](https://github.com/rubiin/pokego) for the sprites
 - [PokeAPI](https://pokeapi.co/) for the data around the pokemon
-
-## Contributing
-
-- Feel free to open a PR with improvements to the scripts.
-
-## To Do
-
-- A search feature for the pokedex
-- Add Gen 9 to the pokedex, open PR needs to be merged with pokemon-colorscripts
