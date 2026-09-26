@@ -6,7 +6,7 @@ try:
     import readchar
 except ImportError:
     print("\n\033[31mError: 'readchar' is not installed.\033[0m")
-    print("Please run: \033[32mpip3 install -r requirements.txt\033[0m from the root of the poketerm repository.\n")
+    print("Please run: \033[32mpip3 install -r requirements.txt\033[0m from the root of the pokegodex repository.\n")
     sys.exit(1)
 
 import readchar
@@ -22,9 +22,9 @@ from pathlib import Path
 # -----------------------
 # Paths
 # -----------------------
-POKEDEX_FILE = Path.home() / ".local/share/poketerm/pokedex.txt"
-GEN_DIR = Path.home() / ".local/share/poketerm/gen_files"
-TRAINER_FILE = Path.home() / ".local/share/poketerm/trainer.json"
+POKEDEX_FILE = Path.home() / ".local/share/pokegodex/pokedex.txt"
+GEN_DIR = Path.home() / ".local/share/pokegodex/gen_files"
+TRAINER_FILE = Path.home() / ".local/share/pokegodex/trainer.json"
 
 # -----------------------
 # ANSI colours (EXACT)
@@ -172,7 +172,7 @@ def draw_details(name, has_normal, has_shiny):
     def handle_resize(signum, frame): pass
     signal.signal(signal.SIGWINCH, handle_resize)
 
-    CACHE_DIR = Path.home() / ".local/share/poketerm/cache"
+    CACHE_DIR = Path.home() / ".local/share/pokegodex/cache"
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
     current = "normal" if has_normal else "shiny"
@@ -184,7 +184,7 @@ def draw_details(name, has_normal, has_shiny):
         try:
             req = urllib.request.Request(
                 f"https://pokeapi.co/api/v2/pokemon/{name.lower()}",
-                headers={"User-Agent": "poketerm/1.0"}
+                headers={"User-Agent": "pokegodex/1.0"}
             )
             with urllib.request.urlopen(req, timeout=10) as r:
                 info = json.loads(r.read().decode())
@@ -217,8 +217,8 @@ def draw_details(name, has_normal, has_shiny):
             sprites[variant] = cache_sprite.read_text().splitlines()
         else:
             try:
-                args = ["pokemon-colorscripts", "--no-title", "-n", name]
-                if variant == "shiny": args.insert(2, "-s")
+                args = ["pokego", "--no-title", "--name", name]
+                if variant == "shiny": args.insert(2, "--shiny")
                 sprites[variant] = subprocess.check_output(args, stderr=subprocess.DEVNULL, text=True).splitlines()
                 cache_sprite.write_text("\n".join(sprites[variant]))
             except Exception:
@@ -298,7 +298,7 @@ def draw_details(name, has_normal, has_shiny):
 # -----------------------
 def print_help():
     print(f"""
-    {YELLOW}Poketerm Pokedex Help{RESET}
+    {YELLOW}Pokegodex Pokedex Help{RESET}
     -----------------------
     Usage:
     {GREEN}pokedex [gen]{RESET}    Open the Pokedex for a specific generation (1-8).
