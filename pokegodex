@@ -257,4 +257,4 @@ else
 fi
 
 # === SHOW IMAGE IN NEOFETCH ===
-POKEGODEX_RUNNING=1 fastfetch --raw - <<< "$image_source"
+POKEGODEX_RUNNING=1 fastfetch --file-raw - <<< "$image_source"
